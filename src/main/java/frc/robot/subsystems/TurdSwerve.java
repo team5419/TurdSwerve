@@ -4,9 +4,7 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.sensors.Pigeon2;
-import com.ctre.phoenix.sensors.Pigeon2Configuration;
-
+import com.ctre.phoenix6.hardware.Pigeon2;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -60,7 +58,7 @@ public class TurdSwerve extends SubsystemBase {
   }
 
   public Rotation2d getGyro() {
-    return new Rotation2d(gyro.getYaw()*Math.PI/180).minus(gyroResetAngle);
+    return new Rotation2d(gyro.getAngle()*Math.PI/180).minus(gyroResetAngle);
   }
 
   public void resetGyro() {
