@@ -20,12 +20,12 @@ public final class Constants {
     public static final int rightAzimuthID = 3;
 
     public static final int leftDriveID = 4;
-    public static final int rightDriveID = 1;
+    public static final int rightDriveID = 5;
 
     public static final int leftAbsoluteEncoderID = 3;
     public static final int rightAbsoluteEncoderID = 0;
 
-    public static final int pigeonID = 5;
+    public static final int pigeonID = 6;
 
     public static final double leftAbsoluteEncoderOffset = -1.304;//absolute encoder reading at position
     public static final double rightAbsoluteEncoderOffset = -0.865;// gears facing inwards: fwd/bck TODO: less janky alignment
@@ -39,10 +39,10 @@ public final class Constants {
     public static final double driveMetersPerRotation = Units.inchesToMeters(2) * Math.PI * 33 / 45 / 2;
     public static final double absoluteEncoderRadiansPerRotation = 2*Math.PI;
     
-    public static final int azimuthAmpLimit = 25;
-    public static final int driveAmpLimit = 15;
+    public static final int azimuthAmpLimit = 35;
+    public static final int driveAmpLimit = 25;
 
-    public static final double podMaxSpeed = 0.75;
+    public static final double podMaxSpeed = 1;
     public static final double azimuthMaxOutput = 0.25;
     public static double driveSpeedToPower = 0.25;
 
@@ -55,18 +55,15 @@ public final class Constants {
     public static final IdleMode azimuthMode = IdleMode.kBrake;
     public static final IdleMode driveMode = IdleMode.kCoast;
 
-    public static final double gyroP = 0.8;
+    public static final double gyroP = 2;
     public static final double gyroI = 0.0;
     public static final double gyroD = 0.00;
 
     public static final Translation2d robotCenter = new Translation2d(0, 0); // serves as "center of robot for calculations; robot will turn about this point
-    public static final Translation2d leftPodPosition = new Translation2d(-1, -1); // units in meters
-    public static final Translation2d rightPodPosition = new Translation2d(1, 1);
+    public static final Translation2d leftPodPosition = new Translation2d(-Units.inchesToMeters(5.5), -Units.inchesToMeters(5.5)); // units in meters
+    public static final Translation2d rightPodPosition = new Translation2d(Units.inchesToMeters(5.5), Units.inchesToMeters(5.5));
     public static final SwerveDriveKinematics drivetrainKinematics = new SwerveDriveKinematics(robotCenter.minus(leftPodPosition), robotCenter.minus(rightPodPosition));
 
     public static final int driverPort = 0;
 
-
-    public static final Hashtable<Double, Double> map = new Hashtable<Double, Double>();
-    // map.put(1,1);
 }

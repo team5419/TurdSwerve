@@ -58,7 +58,7 @@ public class TurdSwerve extends SubsystemBase {
   }
 
   public Rotation2d getGyro() {
-    return new Rotation2d(gyro.getAngle()*Math.PI/180).minus(gyroResetAngle);
+    return new Rotation2d(-gyro.getAngle()*Math.PI/180).minus(gyroResetAngle);
   }
 
   public void resetGyro() {
@@ -71,8 +71,8 @@ public class TurdSwerve extends SubsystemBase {
   }
 
   public void setRobotSpeeds(ChassisSpeeds chassisSpeeds) {
-    targetAngle += chassisSpeeds.omegaRadiansPerSecond / 50;
-    chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond, GyroPID.calculate(getGyro().getRadians(), targetAngle), getGyro());
+    targetAngle += chassisSpeeds.omegaRadiansPerSecond / 10;
+    chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond, chassisSpeeds.omegaRadiansPerSecond * 3 /*GyroPID.calculate(getGyro().getRadians(), targetAngle)*/, getGyro());
     SwerveModuleState[] states = Constants.drivetrainKinematics.toSwerveModuleStates(chassisSpeeds);
     SwerveDriveKinematics.desaturateWheelSpeeds(states, Constants.podMaxSpeed);
 
