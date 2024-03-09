@@ -104,7 +104,7 @@ public class TurdPod extends SubsystemBase {
   @Override
   public void periodic() {
     SmartDashboard.putNumber("getabsoluteEncoder() " + absoluteEncoder.getChannel(), getAbsoluteEncoder());
-    drive.set(speed);// + (azimuth.getAppliedOutput() * azimuthDriveSpeedMultiplier));
+    drive.set(speed + (azimuth.getAppliedOutput() * azimuthDriveSpeedMultiplier));
     SmartDashboard.putNumber("azimuthEncoder.getPosition() " + azimuth.getDeviceId(), azimuthEncoder.getPosition());
     SmartDashboard.putNumber("drive pos " + drive.getDeviceId(), driveEncoder.getPosition());
     SmartDashboard.putNumber("azimuth.getAppliedOutput()" + azimuth.getDeviceId(), azimuth.getAppliedOutput()); //getAppliedOutput());

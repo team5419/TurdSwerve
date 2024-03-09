@@ -16,6 +16,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -38,10 +39,15 @@ public class TurdSwerve extends SubsystemBase {
   private GenericEntry ADMult = tab.add("azimuth-drive speed multiplier", Constants.azimuthDriveSpeedMultiplier).getEntry();
 
   private PIDController GyroPID = new PIDController(Constants.gyroP, Constants.gyroI, Constants.gyroD);
-  private double targetAngle = 0;
+  public double targetAngle = 0;
 
   private Rotation2d gyroResetAngle = new Rotation2d();
+  
+  
+  private final Field2d field2d = new Field2d();
+
   public TurdSwerve() {
+    GyroPID.enableContinuousInput(0.0, 2*Math.PI);
     // gyro.configAllSettings(new Pigeon2Configuration());
   }
 
@@ -71,10 +77,13 @@ public class TurdSwerve extends SubsystemBase {
   }
 
   public void setRobotSpeeds(ChassisSpeeds chassisSpeeds) {
-    targetAngle += chassisSpeeds.omegaRadiansPerSecond / 10;
-    chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond, chassisSpeeds.omegaRadiansPerSecond * 3 /*GyroPID.calculate(getGyro().getRadians(), targetAngle)*/, getGyro());
+    boolean manualTurn = Math.abs(chassisSpeeds.omegaRadiansPerSecond) > 0.1;
+    chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond, manualTurn ? chassisSpeeds.omegaRadiansPerSecond * 3.0 : GyroPID.calculate(getGyro().getRadians(), targetAngle), getGyro());
     SwerveModuleState[] states = Constants.drivetrainKinematics.toSwerveModuleStates(chassisSpeeds);
     SwerveDriveKinematics.desaturateWheelSpeeds(states, Constants.podMaxSpeed);
+    if (manualTurn) {
+    targetAngle = getGyro().getRadians() + (chassisSpeeds.omegaRadiansPerSecond / 2.0);
+    }
 
     leftPod.setPodState(states[0]);
     rightPod.setPodState(states[1]);
@@ -84,5 +93,17 @@ public class TurdSwerve extends SubsystemBase {
   public void periodic() {
     odometer.update(getGyro(), new SwerveModulePosition[] {leftPod.getPodPosition(), rightPod.getPodPosition()});
     SmartDashboard.putNumber("pigeon", getGyro().getDegrees());
+  }
+  
+  private String getFomattedPose() {
+    var pose = odometer.getPoseMeters();
+    return String.format(
+            "(%.3f, %.3f) %.2f degrees",
+            pose.getX(), pose.getY(), pose.getRotation().getDegrees());
+  }
+  
+  public void addDashboardWidgets(ShuffleboardTab tab) {
+    // tab.add("Field", field2d).withPosition(0, 0).withSize(6, 4);
+    tab.addString("Pose", this::getFomattedPose).withPosition(6, 2).withSize(2, 1);
   }
 }
