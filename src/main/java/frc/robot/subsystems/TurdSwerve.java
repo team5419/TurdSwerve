@@ -93,6 +93,7 @@ public class TurdSwerve extends SubsystemBase {
   public void periodic() {
     odometer.update(getGyro(), new SwerveModulePosition[] {leftPod.getPodPosition(), rightPod.getPodPosition()});
     SmartDashboard.putNumber("pigeon", getGyro().getDegrees());
+    field2d.setRobotPose(odometer.getPoseMeters());
   }
   
   private String getFomattedPose() {
@@ -103,7 +104,7 @@ public class TurdSwerve extends SubsystemBase {
   }
   
   public void addDashboardWidgets(ShuffleboardTab tab) {
-    // tab.add("Field", field2d).withPosition(0, 0).withSize(6, 4);
+    tab.add("Field", field2d).withPosition(0, 0).withSize(6, 4);
     tab.addString("Pose", this::getFomattedPose).withPosition(6, 2).withSize(2, 1);
   }
 }
