@@ -78,6 +78,11 @@ public class TurdPod extends SubsystemBase {
     resetPod();
   }
 
+  public void revertZero() {
+    absoluteEncoderOffset = azimuth.getDeviceId() == Constants.leftAzimuthID ? Constants.leftAbsoluteEncoderOffset : Constants.rightAbsoluteEncoderOffset;
+    resetPod();
+  }
+  
   public void stop() {
     azimuth.set(0);
     drive.set(0);

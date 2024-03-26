@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.Odometry;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -31,12 +32,12 @@ public class RobotContainer {
     configureBindings();
     Supplier<Translation2d> driverRightJoystick = () -> new Translation2d(driver.getRightX(), driver.getRightY());
     Supplier<Translation2d> driverLeftJoystick = () -> new Translation2d(driver.getLeftX(), driver.getLeftY());
-    Supplier<Boolean> buttonStart = () -> driver.getStartButton();
+    Supplier<Boolean> resetPods = () -> driver.getStartButton();
     Supplier<Integer> DPAD = () -> driver.getPOV();
     Supplier<Boolean> resetZeroes = () -> driver.getRightBumper() && driver.getYButton();
-    swerve.setDefaultCommand(new TurdDrive(swerve, driverLeftJoystick, driverRightJoystick, buttonStart, DPAD, resetZeroes));
+    Supplier<Boolean> revertZeroes = () -> driver.getRightBumper() && driver.getXButton();
+    swerve.setDefaultCommand(new TurdDrive(swerve, driverLeftJoystick, driverRightJoystick, resetPods, DPAD, resetZeroes, revertZeroes));
     swerve.addDashboardWidgets(Odometry);
-
   }
 
   private void configureBindings() {

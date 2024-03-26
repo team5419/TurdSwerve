@@ -21,16 +21,17 @@ public class TurdDrive extends Command {
   
   TurdSwerve swerve;
   Supplier<Translation2d> joystickRight, joystickLeft;
-  Supplier<Boolean> resetPods, resetZero;
+  Supplier<Boolean> resetPods, resetZero, revertZero;
   Supplier<Integer> DPAD;
   Rotation2d rotation = new Rotation2d();
 
-  public TurdDrive(TurdSwerve swerve, Supplier<Translation2d> joystickLeft, Supplier<Translation2d> joystickRight, Supplier<Boolean> resetPods, Supplier<Integer> DPAD, Supplier<Boolean> resetZero) {
+  public TurdDrive(TurdSwerve swerve, Supplier<Translation2d> joystickLeft, Supplier<Translation2d> joystickRight, Supplier<Boolean> resetPods, Supplier<Integer> DPAD, Supplier<Boolean> resetZero, Supplier<Boolean> revertZero) {
     this.swerve = swerve;
     this.joystickRight = joystickRight;
     this.joystickLeft = joystickLeft;
     this.resetPods = resetPods;
     this.resetZero = resetZero;
+    this.revertZero = revertZero;
     this.DPAD = DPAD;
     addRequirements(swerve);
   }
@@ -50,6 +51,9 @@ public class TurdDrive extends Command {
       swerve.stop();
     } else if (resetPods.get()) {
       swerve.resetPods();
+      swerve.stop();
+    } else if (revertZero.get()) {
+      swerve.revertZero();
       swerve.stop();
     } else {
     boolean deadband = Math.abs(joystickRight.get().getX()) + Math.abs(joystickRight.get().getY()) < 0.1;

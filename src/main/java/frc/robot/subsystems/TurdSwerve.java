@@ -45,7 +45,7 @@ public class TurdSwerve extends SubsystemBase {
 
   private PIDController GyroPID = new PIDController(Constants.gyroP, Constants.gyroI, Constants.gyroD);
   public double targetAngle = 0;
-  private double odoAngleOffset = Math.PI * 0.5;
+  private double odoAngleOffset = Math.PI * 0.0;
 
   private Rotation2d gyroResetAngle = new Rotation2d();
   
@@ -74,6 +74,11 @@ public class TurdSwerve extends SubsystemBase {
   public void resetZero() {
     leftPod.resetZero();
     rightPod.resetZero();
+  }
+
+  public void revertZero() {
+    leftPod.revertZero();
+    rightPod.revertZero();
   }
 
   public void stop() {
