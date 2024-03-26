@@ -68,7 +68,7 @@ public class TurdSwerve extends SubsystemBase {
     rightPod.resetPod();
     leftPod.setPID(azimuthP.getDouble(Constants.azimuthkP), azimuthI.getDouble(Constants.azimuthkI), azimuthD.getDouble(Constants.azimuthkD), azimuthIzone.getDouble(Constants.azimuthkIz), Constants.azimuthMaxOutput, ADMult.getDouble(Constants.azimuthDriveSpeedMultiplier));
     rightPod.setPID(azimuthP.getDouble(Constants.azimuthkP), azimuthI.getDouble(Constants.azimuthkI), azimuthD.getDouble(Constants.azimuthkD), azimuthIzone.getDouble(Constants.azimuthkIz), Constants.azimuthMaxOutput, ADMult.getDouble(Constants.azimuthDriveSpeedMultiplier));
-    resetOdometry(new Pose2d(new Translation2d(12.0, 4.2), new Rotation2d()));
+    resetOdometry(new Pose2d(new Translation2d(8.0, 4.2), new Rotation2d()));
   }
 
   public void resetZero() {
@@ -116,14 +116,14 @@ public class TurdSwerve extends SubsystemBase {
   public void periodic() {
     odometer.update(getGyro(), new SwerveModulePosition[] {leftPod.getPodPosition(), rightPod.getPodPosition()});
     SmartDashboard.putNumber("pigeon", getGyro().getDegrees());
-    field2d.setRobotPose(odometer.getPoseMeters().transformBy(new Transform2d(new Translation2d(), new Rotation2d(odoAngleOffset + (Math.PI * 0.5)))));
+    field2d.setRobotPose(odometer.getPoseMeters().transformBy(new Transform2d(new Translation2d(), new Rotation2d(odoAngleOffset + Math.PI))));
   }
   
   private String getFomattedPose() {
     var pose = odometer.getPoseMeters();
     return String.format(
             "(%.3f, %.3f) %.2f degrees",
-            pose.getX(), pose.getY(), pose.getRotation().plus(new Rotation2d(-Math.PI/2.0)).getDegrees());
+            pose.getX(), pose.getY(), pose.getRotation().plus(new Rotation2d(odoAngleOffset)).getDegrees());
   }
   
   public void addDashboardWidgets(ShuffleboardTab tab) {
