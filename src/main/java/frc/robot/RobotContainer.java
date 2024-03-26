@@ -33,7 +33,8 @@ public class RobotContainer {
     Supplier<Translation2d> driverLeftJoystick = () -> new Translation2d(driver.getLeftX(), driver.getLeftY());
     Supplier<Boolean> buttonStart = () -> driver.getStartButton();
     Supplier<Integer> DPAD = () -> driver.getPOV();
-    swerve.setDefaultCommand(new TurdDrive(swerve, driverLeftJoystick, driverRightJoystick, buttonStart, DPAD));
+    Supplier<Boolean> resetZeroes = () -> driver.getRightBumper() && driver.getYButton();
+    swerve.setDefaultCommand(new TurdDrive(swerve, driverLeftJoystick, driverRightJoystick, buttonStart, DPAD, resetZeroes));
     swerve.addDashboardWidgets(Odometry);
 
   }

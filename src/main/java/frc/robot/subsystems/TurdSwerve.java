@@ -71,6 +71,16 @@ public class TurdSwerve extends SubsystemBase {
     resetOdometry(new Pose2d(new Translation2d(12.0, 4.2), new Rotation2d()));
   }
 
+  public void resetZero() {
+    leftPod.resetZero();
+    rightPod.resetZero();
+  }
+
+  public void stop() {
+    leftPod.stop();
+    rightPod.stop();
+  }
+
   public Rotation2d getGyro() {
     return new Rotation2d(-gyro.getAngle()*Math.PI/180).minus(gyroResetAngle);
   }
@@ -80,9 +90,9 @@ public class TurdSwerve extends SubsystemBase {
     targetAngle = 0;
   }
 
-  public void setLeftPod(SwerveModuleState state) {
-    leftPod.setPodState(state);
-  }
+  // public void setLeftPod(SwerveModuleState state) {
+  //   leftPod.setPodState(state);
+  // }
 
   public void setRobotSpeeds(ChassisSpeeds chassisSpeeds) {
     boolean manualTurn = Math.abs(chassisSpeeds.omegaRadiansPerSecond) > 0.1;

@@ -14,6 +14,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.AnalogEncoder;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -66,6 +67,22 @@ public class TurdPod extends SubsystemBase {
     driveEncoder.setPosition(0);
     azimuthEncoder.setPosition(getAbsoluteEncoder());
   }
+
+  public String getPod() {
+    return azimuth.getDeviceId() == Constants.leftAzimuthID ? "Left" : "Right";
+  }
+
+  public void resetZero() {
+    absoluteEncoderOffset = (absoluteEncoder.getAbsolutePosition() * 2*Math.PI);
+    SmartDashboard.putNumber((getPod() + " Encoder Offset"), absoluteEncoderOffset);
+    resetPod();
+  }
+
+  public void stop() {
+    azimuth.set(0);
+    drive.set(0);
+  }
+
   public void setPID(double P, double I, double D, double IZone, double outputRange, double ADMult) {
     if (P != azimuthPID.getP()) {azimuthPID.setP(P);}
     if (I != azimuthPID.getI()) {azimuthPID.setI(I);}
