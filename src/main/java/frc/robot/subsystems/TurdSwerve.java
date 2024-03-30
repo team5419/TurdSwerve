@@ -100,7 +100,7 @@ public class TurdSwerve extends SubsystemBase {
   // }
 
   public void setRobotSpeeds(ChassisSpeeds chassisSpeeds) {
-    boolean manualTurn = Math.abs(chassisSpeeds.omegaRadiansPerSecond) > 0.1;
+    boolean manualTurn = true;//Math.abs(chassisSpeeds.omegaRadiansPerSecond) > 0.1;
     chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond, manualTurn ? chassisSpeeds.omegaRadiansPerSecond * 3.0 : GyroPID.calculate(getGyro().getRadians(), targetAngle), getGyro());
     SwerveModuleState[] states = Constants.drivetrainKinematics.toSwerveModuleStates(chassisSpeeds);
     SwerveDriveKinematics.desaturateWheelSpeeds(states, Constants.podMaxSpeed);
