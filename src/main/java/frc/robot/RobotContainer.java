@@ -7,22 +7,19 @@ package frc.robot;
 import java.util.function.Supplier;
 
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.Odometry;
-import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.commands.SpeedyCommand;
 import frc.robot.commands.TurdDrive;
-import frc.robot.subsystems.TurdPod;
 import frc.robot.subsystems.TurdSwerve;
 
 public class RobotContainer {
 
   public static final XboxController driver = new XboxController(Constants.driverPort);
+  public static final CommandXboxController driverCommand = new CommandXboxController(Constants.driverPort);
   // public static final TurdPod leftPod = new TurdPod(Constants.leftAzimuthID, Constants.leftDriveID, Constants.leftAbsoluteEncoderID, Constants.leftAzimuthInvert,Constants.rightAzimuthInvert, Constants.leftAbsoluteEncoderOffset);
   public static final TurdSwerve swerve = new TurdSwerve();
   
@@ -41,6 +38,7 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
+    driverCommand.leftBumper().whileTrue(new SpeedyCommand(swerve));
     // new JoystickButton(driver, 4).onTrue(swerve.resetPods());
   }
 

@@ -15,7 +15,6 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -55,6 +54,11 @@ public class TurdSwerve extends SubsystemBase {
   public TurdSwerve() {
     GyroPID.enableContinuousInput(0.0, 2*Math.PI);
     // gyro.configAllSettings(new Pigeon2Configuration());
+  }
+
+  public void setAmpLimit(int ampLimit) {
+    leftPod.setAmpLimit(ampLimit);
+    rightPod.setAmpLimit(ampLimit);
   }
 
   public void resetOdometry(Pose2d pose) {
