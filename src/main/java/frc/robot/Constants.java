@@ -28,7 +28,7 @@ public final class Constants {
     public static final int pigeonID = 6;
 
     public static final double leftAbsoluteEncoderOffset = 3.45;//absolute encoder reading at position
-    public static final double rightAbsoluteEncoderOffset = 5.420739537358221;// gears facing inwards: fwd/bck TODO: less janky alignment
+    public static final double rightAbsoluteEncoderOffset = 5.420739537358221 - 4.705;// gears facing inwards: fwd/bck TODO: less janky alignment
 
     public static final boolean leftAzimuthInvert = false;
     public static final boolean rightAzimuthInvert = false;
