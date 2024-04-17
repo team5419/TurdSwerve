@@ -55,9 +55,11 @@ public class TurdDrive extends Command {
       swerve.revertZero();
       swerve.stop();
     } else {
-    boolean deadband = Math.abs(joystickRight.get().getX()) + Math.abs(joystickRight.get().getY()) < 0.1;
+    boolean deadband = Math.abs(joystickRight.get().getX()) + Math.abs(joystickRight.get().getY()) < 0.05;
     double speedX = deadband ? 0 : -joystickRight.get().getX();
     double speedY = deadband ? 0 : joystickRight.get().getY();
+    // double speedX = deadband ? 0 : 3.0 * Math.abs(joystickRight.get().getX()) * -joystickRight.get().getX();
+    // double speedY = deadband ? 0 : 3.0 * Math.abs(joystickRight.get().getY()) * joystickRight.get().getY();
     double speedOmega = Math.abs(joystickLeft.get().getX()) > 0.07 ? -joystickLeft.get().getX() * Math.abs(joystickLeft.get().getX()) : 0;
     ChassisSpeeds speeds = new ChassisSpeeds(speedX, speedY, speedOmega);
     swerve.setRobotSpeeds(speeds);

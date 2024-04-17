@@ -20,6 +20,7 @@ public class SpeedyCommand extends Command {
   @Override
   public void initialize() {
     swerve.setAmpLimit(Constants.driveTopAmpLimit);
+    swerve.setDriveSpeedtoPower(Constants.driveTopSpeedToPower);
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -30,6 +31,7 @@ public class SpeedyCommand extends Command {
   @Override
   public void end(boolean interrupted) {
     swerve.setAmpLimit(Constants.driveAmpLimit);
+    swerve.setDriveSpeedtoPower(Constants.driveSpeedToPower);
 
   }
 

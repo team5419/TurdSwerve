@@ -31,6 +31,7 @@ public class TurdPod extends SubsystemBase {
   private double azimuthDriveSpeedMultiplier;
   private double speed = 0;
   private double absoluteEncoderOffset;
+  private double driveSpeedToPower = Constants.driveSpeedToPower;
 
 
   public TurdPod(int azimuthID, int driveID, int absoluteEncoderID, boolean azimuthInvert, boolean driveInvert, double absoluteEncoderOffset) {
@@ -64,6 +65,10 @@ public class TurdPod extends SubsystemBase {
   
   public void setAmpLimit(int ampLimit) {
     drive.setSmartCurrentLimit(ampLimit);
+  } 
+
+  public void setDriveSpeedtoPower(double driveSpeedToPower) {
+    this.driveSpeedToPower = driveSpeedToPower;
   }
 
   public void resetPod() {
@@ -112,7 +117,7 @@ public class TurdPod extends SubsystemBase {
   public void setPodState(SwerveModuleState state) {
     state = SwerveModuleState.optimize(state, new Rotation2d(azimuthEncoder.getPosition())); // does not account for rotations between 180 and 360?
     azimuthPID.setReference(state.angle.getRadians(), ControlType.kPosition); 
-    speed = Math.abs(state.speedMetersPerSecond) < .01 ? 0 : state.speedMetersPerSecond * Constants.driveSpeedToPower;
+    speed = Math.abs(state.speedMetersPerSecond) < .01 ? 0 : state.speedMetersPerSecond * driveSpeedToPower;
     SmartDashboard.putNumber("state.angle.getRadians()", state.angle.getRadians());
 
     double error = (state.angle.getRadians() - azimuthEncoder.getPosition()) % (2*Math.PI);
