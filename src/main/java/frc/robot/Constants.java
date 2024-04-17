@@ -67,5 +67,6 @@ public final class Constants {
     public static final SwerveDriveKinematics drivetrainKinematics = new SwerveDriveKinematics(robotCenter.minus(leftPodPosition), robotCenter.minus(rightPodPosition));
 
     public static final int driverPort = 0;
+    public static final double driveMotorRampRate = 0.2;
 
 }

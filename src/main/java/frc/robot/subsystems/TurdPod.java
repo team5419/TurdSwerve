@@ -58,6 +58,8 @@ public class TurdPod extends SubsystemBase {
     azimuth.setIdleMode(Constants.azimuthMode);
     drive.setIdleMode(Constants.driveMode);
 
+    drive.setOpenLoopRampRate(Constants.driveMotorRampRate);
+
     azimuthPID = azimuth.getPIDController();
 
     resetPod();
