@@ -24,15 +24,16 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
+import frc.robot.constants.Constants;
+import frc.robot.constants.RobotMap;
 
 public class TurdSwerve extends SubsystemBase {
   private final SlewRateLimiter xLimiter = new SlewRateLimiter(0.75);
   private final SlewRateLimiter yLimiter = new SlewRateLimiter(0.75);
-  private final Pigeon2 gyro = new Pigeon2(Constants.pigeonID);
-  private final TurdPod leftPod = new TurdPod(Constants.leftAzimuthID, Constants.leftDriveID, Constants.leftAbsoluteEncoderID, Constants.leftAzimuthInvert, Constants.leftDriveInvert, Constants.leftAbsoluteEncoderOffset);
-  private final TurdPod rightPod = new TurdPod(Constants.rightAzimuthID, Constants.rightDriveID, Constants.rightAbsoluteEncoderID, Constants.rightAzimuthInvert, Constants.rightDriveInvert, Constants.rightAbsoluteEncoderOffset);
-  private final SwerveDriveOdometry odometer = new SwerveDriveOdometry(Constants.drivetrainKinematics,
+  private final Pigeon2 gyro = new Pigeon2(RobotMap.pigeonID);
+  private final TurdPod leftPod = new TurdPod(RobotMap.leftAzimuthID, RobotMap.leftDriveID, RobotMap.leftAbsoluteEncoderID, RobotMap.leftAzimuthInvert, RobotMap.leftDriveInvert, RobotMap.leftAbsoluteEncoderOffset);
+  private final TurdPod rightPod = new TurdPod(RobotMap.rightAzimuthID, RobotMap.rightDriveID, RobotMap.rightAbsoluteEncoderID, RobotMap.rightAzimuthInvert, RobotMap.rightDriveInvert, RobotMap.rightAbsoluteEncoderOffset);
+  private final SwerveDriveOdometry odometer = new SwerveDriveOdometry(RobotMap.drivetrainKinematics,
           new Rotation2d(0), new SwerveModulePosition[] {
               leftPod.getPodPosition(),
               rightPod.getPodPosition()
@@ -115,7 +116,7 @@ public class TurdSwerve extends SubsystemBase {
     boolean manualTurn = true;//Math.abs(chassisSpeeds.omegaRadiansPerSecond) > 0.1;
     // chassisSpeeds = chassisSpeeds.times(robotMaxSpeed);
     chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(xLimiter.calculate(chassisSpeeds.vxMetersPerSecond), yLimiter.calculate(chassisSpeeds.vyMetersPerSecond), manualTurn ? chassisSpeeds.omegaRadiansPerSecond * 3.0 : GyroPID.calculate(getGyro().getRadians(), targetAngle), getGyro());
-    SwerveModuleState[] states = Constants.drivetrainKinematics.toSwerveModuleStates(chassisSpeeds);
+    SwerveModuleState[] states = RobotMap.drivetrainKinematics.toSwerveModuleStates(chassisSpeeds);
     SwerveDriveKinematics.desaturateWheelSpeeds(states, Constants.podMaxSpeed);
     if (manualTurn) {
     targetAngle = getGyro().getRadians() + (chassisSpeeds.omegaRadiansPerSecond / 2.0);

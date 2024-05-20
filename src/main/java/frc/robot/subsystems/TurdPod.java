@@ -16,7 +16,9 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.AnalogEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
+import frc.robot.Robot;
+import frc.robot.constants.Constants;
+import frc.robot.constants.RobotMap;
 
 public class TurdPod extends SubsystemBase {
 
@@ -45,9 +47,9 @@ public class TurdPod extends SubsystemBase {
     azimuth.setInverted(azimuthInvert);
     drive.setInverted(driveInvert);
 
-    driveEncoder.setPositionConversionFactor(Constants.driveMetersPerRotation);
-    azimuthEncoder.setPositionConversionFactor(Constants.azimuthRadiansPerRotation);
-    absoluteEncoder.setDistancePerRotation(Constants.absoluteEncoderRadiansPerRotation);
+    driveEncoder.setPositionConversionFactor(RobotMap.driveMetersPerMotorRotation);
+    azimuthEncoder.setPositionConversionFactor(RobotMap.azimuthRadiansPerMotorRotation);
+    absoluteEncoder.setDistancePerRotation(RobotMap.absoluteRadiansPerEncoderRotation);
 
     // absoluteEncoder.setPositionOffset(absoluteEncoderOffset);
     this.absoluteEncoderOffset = absoluteEncoderOffset;
@@ -79,7 +81,7 @@ public class TurdPod extends SubsystemBase {
   }
 
   public String getPod() {
-    return azimuth.getDeviceId() == Constants.leftAzimuthID ? "Left" : "Right";
+    return azimuth.getDeviceId() == RobotMap.leftAzimuthID ? "Left" : "Right";
   }
 
   public void resetZero() {
@@ -89,7 +91,7 @@ public class TurdPod extends SubsystemBase {
   }
 
   public void revertZero() {
-    absoluteEncoderOffset = azimuth.getDeviceId() == Constants.leftAzimuthID ? Constants.leftAbsoluteEncoderOffset : Constants.rightAbsoluteEncoderOffset;
+    absoluteEncoderOffset = azimuth.getDeviceId() == RobotMap.leftAzimuthID ? RobotMap.leftAbsoluteEncoderOffset : RobotMap.rightAbsoluteEncoderOffset;
     resetPod();
   }
   
