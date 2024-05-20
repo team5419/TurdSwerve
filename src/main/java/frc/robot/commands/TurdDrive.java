@@ -17,17 +17,13 @@ public class TurdDrive extends Command {
   
   TurdSwerve swerve;
   Supplier<Translation2d> joystickRight, joystickLeft;
-  Supplier<Boolean> resetPods, resetZero, revertZero;
   Supplier<Integer> DPAD;
   Rotation2d rotation = new Rotation2d();
 
-  public TurdDrive(TurdSwerve swerve, Supplier<Translation2d> joystickLeft, Supplier<Translation2d> joystickRight, Supplier<Boolean> resetPods, Supplier<Integer> DPAD, Supplier<Boolean> resetZero, Supplier<Boolean> revertZero) {
+  public TurdDrive(TurdSwerve swerve, Supplier<Translation2d> joystickLeft, Supplier<Translation2d> joystickRight, Supplier<Integer> DPAD) {
     this.swerve = swerve;
     this.joystickRight = joystickRight;
     this.joystickLeft = joystickLeft;
-    this.resetPods = resetPods;
-    this.resetZero = resetZero;
-    this.revertZero = revertZero;
     this.DPAD = DPAD;
     addRequirements(swerve);
   }
@@ -45,16 +41,6 @@ public class TurdDrive extends Command {
     if (DPAD.get() != -1) {
       swerve.targetAngle = -Units.degreesToRadians(DPAD.get());
     }
-    if (resetZero.get()){
-      swerve.resetZero();
-      swerve.stop();
-    } else if (resetPods.get()) {
-      swerve.resetPods();
-      swerve.stop();
-    } else if (revertZero.get()) {
-      swerve.revertZero();
-      swerve.stop();
-    } else {
     boolean deadband = Math.abs(joystickRight.get().getX()) + Math.abs(joystickRight.get().getY()) < 0.05;
     double speedX = deadband ? 0 : -joystickRight.get().getX();
     double speedY = deadband ? 0 : joystickRight.get().getY();
@@ -63,7 +49,7 @@ public class TurdDrive extends Command {
     double speedOmega = Math.abs(joystickLeft.get().getX()) > 0.07 ? -joystickLeft.get().getX() * Math.abs(joystickLeft.get().getX()) : 0;
     ChassisSpeeds speeds = new ChassisSpeeds(speedX, speedY, speedOmega);
     swerve.setRobotSpeeds(speeds);
-    }
+    
   }
 
   // Called once the command ends or is interrupted.
