@@ -15,7 +15,6 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.ResetZeroes;
 import frc.robot.commands.RevertZeroes;
-import frc.robot.commands.SpeedyCommand;
 import frc.robot.commands.TurdDrive;
 import frc.robot.subsystems.TurdSwerve;
 
@@ -33,15 +32,15 @@ public class RobotContainer {
     Supplier<Translation2d> driverRightJoystick = () -> new Translation2d(driverRaw.getRightX(), driverRaw.getRightY());
     Supplier<Translation2d> driverLeftJoystick = () -> new Translation2d(driverRaw.getLeftX(), driverRaw.getLeftY());
     Supplier<Integer> DPAD = () -> driverRaw.getPOV();
-    swerve.setDefaultCommand(new TurdDrive(swerve, driverLeftJoystick, driverRightJoystick, DPAD));
+    Supplier<Double> robotMaxSpeed = (driverRaw.getLeftBumper() ? () -> 1.0 : () -> Constants.robotMaxSpeed);
+    swerve.setDefaultCommand(new TurdDrive(swerve, driverLeftJoystick, driverRightJoystick, DPAD, robotMaxSpeed));
     swerve.addDashboardWidgets(Odometry);
   }
 
   private void configureBindings() {
-    driverCommand.leftBumper().whileTrue(new SpeedyCommand(swerve));
-    driverCommand.rightBumper().and(() -> driverRaw.getYButton()).whileTrue(new ResetZeroes(swerve));
+    driverCommand.rightBumper().and(() -> driverRaw.getYButton()).onTrue(new ResetZeroes(swerve));
     driverCommand.rightBumper().and(() -> driverRaw.getXButton()).whileTrue(new RevertZeroes(swerve));
-    driverCommand.start().whileTrue(new InstantCommand(swerve::resetPods));
+    driverCommand.start().whileTrue(new InstantCommand(swerve::resetPods, swerve));
   }
 
   public Command getAutonomousCommand() {

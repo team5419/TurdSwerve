@@ -69,9 +69,9 @@ public class TurdPod extends SubsystemBase {
     drive.setSmartCurrentLimit(ampLimit);
   } 
 
-  public void setDriveSpeedtoPower(double driveSpeedToPower) {
-    this.driveSpeedToPower = driveSpeedToPower;
-  }
+  // public void setDriveSpeedtoPower(double driveSpeedToPower) {
+  //   this.driveSpeedToPower = driveSpeedToPower;
+  // }
 
   public void resetPod() {
     driveEncoder.setPosition(0);

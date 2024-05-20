@@ -43,10 +43,10 @@ public final class Constants {
     public static final int driveAmpLimit = 25;
     public static final int driveTopAmpLimit = 90;
 
+    public static final double robotMaxSpeed = 0.25;
     public static final double podMaxSpeed = 1;
     public static final double azimuthMaxOutput = 0.25;
-    public static double driveSpeedToPower = 0.25;
-    public static double driveTopSpeedToPower = 1.0;
+    public static double driveSpeedToPower = 1.0;
 
     public static final double azimuthkP = 0.4;
     public static final double azimuthkI = 0.0;

@@ -27,8 +27,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class TurdSwerve extends SubsystemBase {
-  private final SlewRateLimiter xLimiter = new SlewRateLimiter(3.0);
-  private final SlewRateLimiter yLimiter = new SlewRateLimiter(3.0);
+  private final SlewRateLimiter xLimiter = new SlewRateLimiter(0.75);
+  private final SlewRateLimiter yLimiter = new SlewRateLimiter(0.75);
   private final Pigeon2 gyro = new Pigeon2(Constants.pigeonID);
   private final TurdPod leftPod = new TurdPod(Constants.leftAzimuthID, Constants.leftDriveID, Constants.leftAbsoluteEncoderID, Constants.leftAzimuthInvert, Constants.leftDriveInvert, Constants.leftAbsoluteEncoderOffset);
   private final TurdPod rightPod = new TurdPod(Constants.rightAzimuthID, Constants.rightDriveID, Constants.rightAbsoluteEncoderID, Constants.rightAzimuthInvert, Constants.rightDriveInvert, Constants.rightAbsoluteEncoderOffset);
@@ -64,10 +64,10 @@ public class TurdSwerve extends SubsystemBase {
     rightPod.setAmpLimit(ampLimit);
   }
 
-  public void setDriveSpeedtoPower(double driveSpeedToPower) {
-    leftPod.setDriveSpeedtoPower(driveSpeedToPower);
-    rightPod.setDriveSpeedtoPower(driveSpeedToPower);
-  }
+  // public void setDriveSpeedtoPower(double driveSpeedToPower) {
+  //   leftPod.setDriveSpeedtoPower(driveSpeedToPower);
+  //   rightPod.setDriveSpeedtoPower(driveSpeedToPower);
+  // }
 
   public void resetOdometry(Pose2d pose) {
     odoAngleOffset = DriverStation.getAlliance().get() == Alliance.Red ? Math.PI * 0.5 : Math.PI * 1.5;
@@ -113,6 +113,7 @@ public class TurdSwerve extends SubsystemBase {
 
   public void setRobotSpeeds(ChassisSpeeds chassisSpeeds) {
     boolean manualTurn = true;//Math.abs(chassisSpeeds.omegaRadiansPerSecond) > 0.1;
+    // chassisSpeeds = chassisSpeeds.times(robotMaxSpeed);
     chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(xLimiter.calculate(chassisSpeeds.vxMetersPerSecond), yLimiter.calculate(chassisSpeeds.vyMetersPerSecond), manualTurn ? chassisSpeeds.omegaRadiansPerSecond * 3.0 : GyroPID.calculate(getGyro().getRadians(), targetAngle), getGyro());
     SwerveModuleState[] states = Constants.drivetrainKinematics.toSwerveModuleStates(chassisSpeeds);
     SwerveDriveKinematics.desaturateWheelSpeeds(states, Constants.podMaxSpeed);

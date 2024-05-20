@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Constants;
 import frc.robot.subsystems.TurdSwerve;
 
 public class TurdDrive extends Command {
@@ -18,13 +19,15 @@ public class TurdDrive extends Command {
   TurdSwerve swerve;
   Supplier<Translation2d> joystickRight, joystickLeft;
   Supplier<Integer> DPAD;
+  Supplier<Double> robotMaxSpeed;
   Rotation2d rotation = new Rotation2d();
 
-  public TurdDrive(TurdSwerve swerve, Supplier<Translation2d> joystickLeft, Supplier<Translation2d> joystickRight, Supplier<Integer> DPAD) {
+  public TurdDrive(TurdSwerve swerve, Supplier<Translation2d> joystickLeft, Supplier<Translation2d> joystickRight, Supplier<Integer> DPAD, Supplier<Double> robotMaxSpeed) {
     this.swerve = swerve;
     this.joystickRight = joystickRight;
     this.joystickLeft = joystickLeft;
     this.DPAD = DPAD;
+    this.robotMaxSpeed = robotMaxSpeed;
     addRequirements(swerve);
   }
 
@@ -41,9 +44,15 @@ public class TurdDrive extends Command {
     if (DPAD.get() != -1) {
       swerve.targetAngle = -Units.degreesToRadians(DPAD.get());
     }
+
+    if (robotMaxSpeed.get() > 0.95) {
+      swerve.setAmpLimit(Constants.driveTopAmpLimit);
+    } else {
+      swerve.setAmpLimit(Constants.driveAmpLimit);
+    }
     boolean deadband = Math.abs(joystickRight.get().getX()) + Math.abs(joystickRight.get().getY()) < 0.05;
-    double speedX = deadband ? 0 : -joystickRight.get().getX();
-    double speedY = deadband ? 0 : joystickRight.get().getY();
+    double speedX = deadband ? 0 : -joystickRight.get().getX() * robotMaxSpeed.get();
+    double speedY = deadband ? 0 : joystickRight.get().getY() * robotMaxSpeed.get();
     // double speedX = deadband ? 0 : 3.0 * Math.abs(joystickRight.get().getX()) * -joystickRight.get().getX();
     // double speedY = deadband ? 0 : 3.0 * Math.abs(joystickRight.get().getY()) * joystickRight.get().getY();
     double speedOmega = Math.abs(joystickLeft.get().getX()) > 0.07 ? -joystickLeft.get().getX() * Math.abs(joystickLeft.get().getX()) : 0;

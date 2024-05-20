@@ -10,7 +10,6 @@ import frc.robot.subsystems.TurdSwerve;
 
 public class ResetZeroes extends Command {
   private TurdSwerve swerve;
-  /** Creates a new SpeedyCommand. */
   public ResetZeroes(TurdSwerve swerve) {
     this.swerve = swerve;
     addRequirements(swerve);
