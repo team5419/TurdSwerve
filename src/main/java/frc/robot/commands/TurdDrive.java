@@ -12,6 +12,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.constants.Constants;
+import frc.robot.constants.RobotMap;
 import frc.robot.subsystems.TurdSwerve;
 
 public class TurdDrive extends Command {
@@ -19,15 +20,16 @@ public class TurdDrive extends Command {
   TurdSwerve swerve;
   Supplier<Translation2d> joystickRight, joystickLeft;
   Supplier<Integer> DPAD;
-  Supplier<Double> robotMaxSpeed;
+  Supplier<Boolean> boost;
   Rotation2d rotation = new Rotation2d();
+  double maxSpeed = Constants.robotMaxSpeed;
 
-  public TurdDrive(TurdSwerve swerve, Supplier<Translation2d> joystickLeft, Supplier<Translation2d> joystickRight, Supplier<Integer> DPAD, Supplier<Double> robotMaxSpeed) {
+  public TurdDrive(TurdSwerve swerve, Supplier<Translation2d> joystickLeft, Supplier<Translation2d> joystickRight, Supplier<Integer> DPAD, Supplier<Boolean> boost) {
     this.swerve = swerve;
     this.joystickRight = joystickRight;
     this.joystickLeft = joystickLeft;
     this.DPAD = DPAD;
-    this.robotMaxSpeed = robotMaxSpeed;
+    this.boost = boost;
     addRequirements(swerve);
   }
 
@@ -45,14 +47,16 @@ public class TurdDrive extends Command {
       swerve.targetAngle = -Units.degreesToRadians(DPAD.get());
     }
 
-    if (robotMaxSpeed.get() > 0.95) {
+    if (boost.get()) {
       swerve.setAmpLimit(Constants.driveTopAmpLimit);
+      maxSpeed = 1;
     } else {
       swerve.setAmpLimit(Constants.driveAmpLimit);
+      maxSpeed = Constants.robotMaxSpeed;
     }
     boolean deadband = Math.abs(joystickRight.get().getX()) + Math.abs(joystickRight.get().getY()) < 0.05;
-    double speedX = deadband ? 0 : -joystickRight.get().getX() * robotMaxSpeed.get();
-    double speedY = deadband ? 0 : joystickRight.get().getY() * robotMaxSpeed.get();
+    double speedX = deadband ? 0 : -joystickRight.get().getX() * maxSpeed;
+    double speedY = deadband ? 0 : joystickRight.get().getY() * maxSpeed;
     // double speedX = deadband ? 0 : 3.0 * Math.abs(joystickRight.get().getX()) * -joystickRight.get().getX();
     // double speedY = deadband ? 0 : 3.0 * Math.abs(joystickRight.get().getY()) * joystickRight.get().getY();
     double speedOmega = Math.abs(joystickLeft.get().getX()) > 0.07 ? -joystickLeft.get().getX() * Math.abs(joystickLeft.get().getX()) : 0;
