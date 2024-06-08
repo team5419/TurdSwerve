@@ -144,4 +144,8 @@ public class TurdSwerve extends SubsystemBase {
     tab.add("Field", field2d).withPosition(0, 0).withSize(6, 4);
     tab.addString("Pose", this::getFomattedPose).withPosition(6, 2).withSize(2, 1);
   }
+
+  public double[] getDriveAmps() {
+    return new double[] {leftPod.getDriveAmp(), rightPod.getDriveAmp()};
+  }
 }

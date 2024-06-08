@@ -21,7 +21,7 @@ public final class Constants {
     // Azimuth Settings
     public static final IdleMode azimuthMode = IdleMode.kBrake;
 
-    public static final int azimuthAmpLimit = 35;
+    public static final int azimuthAmpLimit = 55;
     public static final double azimuthMaxOutput = 0.25;
 
     public static final double azimuthkP = 0.4;
@@ -36,7 +36,7 @@ public final class Constants {
     public static final IdleMode driveMode = IdleMode.kCoast;
 
     public static final int driveAmpLimit = 25;
-    public static final int driveTopAmpLimit = 90;
+    public static final int driveTopAmpLimit = 50;
     public static final double driveSpeedToPower = 1.0;
     public static final double driveMotorRampRate = 0.2;
 
