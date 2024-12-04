@@ -16,7 +16,7 @@ import frc.robot.constants.RobotMap;
 import frc.robot.subsystems.TurdSwerve;
 
 public class TurdDrive extends Command {
-  
+
   TurdSwerve swerve;
   Supplier<Translation2d> joystickRight, joystickLeft;
   Supplier<Integer> DPAD;
@@ -62,7 +62,7 @@ public class TurdDrive extends Command {
     double speedOmega = Math.abs(joystickLeft.get().getX()) > 0.07 ? -joystickLeft.get().getX() * Math.abs(joystickLeft.get().getX())*0.3 : 0;
     ChassisSpeeds speeds = new ChassisSpeeds(speedX, speedY, speedOmega);
     swerve.setRobotSpeeds(speeds);
-    
+
   }
 
   // Called once the command ends or is interrupted.

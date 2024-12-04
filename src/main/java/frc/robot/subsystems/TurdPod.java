@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems;
 
+// import com.ctre.phoenix6.hardware.TalonFX;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
@@ -42,7 +43,7 @@ public class TurdPod extends SubsystemBase {
 
     azimuthEncoder = azimuth.getEncoder();
     driveEncoder = drive.getEncoder();
-    
+
     azimuth.setInverted(azimuthInvert);
     drive.setInverted(driveInvert);
 
@@ -65,10 +66,10 @@ public class TurdPod extends SubsystemBase {
 
     resetPod();
   }
-  
+
   public void setAmpLimit(int ampLimit) {
     drive.setSmartCurrentLimit(ampLimit);
-  } 
+  }
 
   // public void setDriveSpeedtoPower(double driveSpeedToPower) {
   //   this.driveSpeedToPower = driveSpeedToPower;
@@ -94,7 +95,7 @@ public class TurdPod extends SubsystemBase {
     SmartDashboard.putNumber((getPod() + " Encoder Offset"), absoluteEncoderOffset);
     resetPod();
   }
-  
+
   public void stop() {
     azimuth.set(0);
     drive.set(0);
@@ -120,7 +121,7 @@ public class TurdPod extends SubsystemBase {
 
   public void setPodState(SwerveModuleState state) {
     state = SwerveModuleState.optimize(state, new Rotation2d(azimuthEncoder.getPosition())); // does not account for rotations between 180 and 360?
-    azimuthPID.setReference(state.angle.getRadians(), ControlType.kPosition); 
+    azimuthPID.setReference(state.angle.getRadians(), ControlType.kPosition);
     speed = Math.abs(state.speedMetersPerSecond) < .01 ? 0 : state.speedMetersPerSecond * driveSpeedToPower;
     SmartDashboard.putNumber("state.angle.getRadians()", state.angle.getRadians());
 
