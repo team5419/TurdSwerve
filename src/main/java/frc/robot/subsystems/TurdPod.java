@@ -4,150 +4,263 @@
 
 package frc.robot.subsystems;
 
-// import com.ctre.phoenix6.hardware.TalonFX;
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.SparkPIDController;
-import com.revrobotics.CANSparkBase.ControlType;
-import com.revrobotics.CANSparkLowLevel.MotorType;
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.PositionDutyCycle;
+import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.AbsoluteSensorRangeValue;
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.wpilibj.AnalogEncoder;
+import edu.wpi.first.wpilibj.motorcontrol.Talon;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.constants.Constants;
-import frc.robot.constants.RobotMap;
-
+/** This is a sample pod that uses a CANcoder and TalonFXes. */
 public class TurdPod extends SubsystemBase {
+    public CANcoder absoluteEncoder;
+    public TalonFX azimuthMotor;
+    public TalonFX driveMotor;
+    public double azimuthDriveSpeedMultiplier;
+    private double speed = 0;
+    TalonFX motor;
 
-  private final CANSparkMax azimuth;
-  private final CANSparkMax drive;
-  private final AnalogEncoder absoluteEncoder;
+    TalonFXConfiguration driveConfig = new TalonFXConfiguration();
+    TalonFXConfiguration azimuthConfig = new TalonFXConfiguration();
+    CANcoderConfiguration coderConfig = new CANcoderConfiguration();
 
-  private final RelativeEncoder azimuthEncoder;
-  private final RelativeEncoder driveEncoder;
-  private final SparkPIDController azimuthPID;
+    //variable that determines whether or not to apply PID configurations to the motor (defaults to true for initial application)
+    boolean apply = true;
 
-  private double azimuthDriveSpeedMultiplier;
-  private double speed = 0;
-  private double absoluteEncoderOffset;
-  private double driveSpeedToPower = Constants.driveSpeedToPower;
+    //making position duty cycle default because it's the simplest. if you want to use a different control type, you can change it
+    private final PositionDutyCycle anglePID = new PositionDutyCycle(0).withSlot(0);
 
 
-  public TurdPod(int azimuthID, int driveID, int absoluteEncoderID, boolean azimuthInvert, boolean driveInvert, double absoluteEncoderOffset) {
-    azimuth = new CANSparkMax(azimuthID, MotorType.kBrushless);
-    drive = new CANSparkMax(driveID, MotorType.kBrushless);
-    absoluteEncoder = new AnalogEncoder(absoluteEncoderID);
+    private double initialOffset;
 
-    azimuthEncoder = azimuth.getEncoder();
-    driveEncoder = drive.getEncoder();
 
-    azimuth.setInverted(azimuthInvert);
-    drive.setInverted(driveInvert);
+    public TurdPod(int absoluteEncoderID, int azimuthID, int driveID, double absoluteEncoderOffset, boolean azimuthInvert, int azimuthLimit, double azimuthRotationsPerRot, boolean azimuthBrake, double azimuthRR, double kP, double kI, double kD, double FF, double maxOut, double ADMult, boolean driveInvert, int driveLimit, boolean driveBrake, double driveRR) {
+        absoluteEncoder = makeCANCoder(absoluteEncoderID, false, absoluteEncoderOffset);
+        
+        driveMotor = makeDrive(driveID, driveInvert, driveBrake, driveLimit, driveRR, 1d, 1d);
+        
+        this.azimuthMotor = new TalonFX(azimuthID);
 
-    driveEncoder.setPositionConversionFactor(RobotMap.driveMetersPerMotorRotation);
-    azimuthEncoder.setPositionConversionFactor(RobotMap.azimuthRadiansPerMotorRotation);
-    absoluteEncoder.setDistancePerRotation(RobotMap.absoluteRadiansPerEncoderRotation);
+        //set neutral mode and inverts
+        azimuthConfig.MotorOutput.Inverted = azimuthInvert ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive;
+        azimuthConfig.MotorOutput.NeutralMode = azimuthBrake ? NeutralModeValue.Brake : NeutralModeValue.Coast;
 
-    // absoluteEncoder.setPositionOffset(absoluteEncoderOffset);
-    this.absoluteEncoderOffset = absoluteEncoderOffset;
+        //set current limits; supply current limits are hardcoded because they are almost always the same
+        azimuthConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+        azimuthConfig.CurrentLimits.SupplyCurrentLimit = 40d;
+        azimuthConfig.CurrentLimits.SupplyCurrentThreshold = 40d;
+        azimuthConfig.CurrentLimits.SupplyTimeThreshold = 100d;
 
-    azimuth.setSmartCurrentLimit(Constants.azimuthAmpLimit);
-    drive.setSmartCurrentLimit(Constants.driveAmpLimit);
+        azimuthConfig.CurrentLimits.StatorCurrentLimitEnable = azimuthLimit > 0;
+        azimuthConfig.CurrentLimits.StatorCurrentLimit = azimuthLimit;
 
-    azimuth.setIdleMode(Constants.azimuthMode);
-    drive.setIdleMode(Constants.driveMode);
 
-    drive.setOpenLoopRampRate(Constants.driveMotorRampRate);
+        // this is kind of bad code, but it's the easiest way to set a ramp rate regardless of control type
+        azimuthConfig.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = azimuthRR;
+        azimuthConfig.OpenLoopRamps.TorqueOpenLoopRampPeriod = azimuthRR;
+        azimuthConfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = azimuthRR; 
+        azimuthConfig.ClosedLoopRamps.DutyCycleClosedLoopRampPeriod = azimuthRR;
+        azimuthConfig.ClosedLoopRamps.TorqueClosedLoopRampPeriod = azimuthRR;
+        azimuthConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = azimuthRR;
 
-    azimuthPID = azimuth.getPIDController();
+        //set feedback ratios
+        azimuthConfig.Feedback.SensorToMechanismRatio = 1d;
+        azimuthConfig.Feedback.RotorToSensorRatio = 1d;
 
-    resetPod();
-  }
+        azimuthConfig.ClosedLoopGeneral.ContinuousWrap = true;
+        azimuthConfig.Feedback.FeedbackRemoteSensorID = absoluteEncoderID;
+        azimuthConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
 
-  public void setAmpLimit(int ampLimit) {
-    drive.setSmartCurrentLimit(ampLimit);
-  }
+        this.azimuthMotor.getConfigurator().apply(azimuthConfig);
 
-  // public void setDriveSpeedtoPower(double driveSpeedToPower) {
-  //   this.driveSpeedToPower = driveSpeedToPower;
-  // }
+        if(azimuthConfig.Slot0.kP != kP) {azimuthConfig.Slot0.kP = kP; apply = true;}
+        if(azimuthConfig.Slot0.kI != kI) {azimuthConfig.Slot0.kI = kI; apply = true;}
+        if(azimuthConfig.Slot0.kD != kD) {azimuthConfig.Slot0.kD = kD; apply = true;}
+        if(azimuthConfig.Slot0.kS != FF) {azimuthConfig.Slot0.kS = FF; apply = true;}
+        if(azimuthConfig.MotorOutput.PeakForwardDutyCycle != maxOut) {
+            azimuthConfig.MotorOutput.PeakForwardDutyCycle = maxOut;
+            azimuthConfig.MotorOutput.PeakReverseDutyCycle = -maxOut;
+            apply = true;
+        }
+        if(apply) {
+            this.azimuthMotor.getConfigurator().apply(azimuthConfig);
+        } 
+        azimuthDriveSpeedMultiplier = ADMult;
 
-  public void resetPod() {
-    driveEncoder.setPosition(0);
-    azimuthEncoder.setPosition(getAbsoluteEncoder());
-  }
+        apply = false;
+        
+        resetPod();
+    }
 
-  public String getPod() {
-    return azimuth.getDeviceId() == RobotMap.leftAzimuthID ? "Left" : "Right";
-  }
+    /**
+     * Creates a new TurdonFX (please use this for drive motors only)
+     * @param id CAN ID for the motor
+     * @param inverted true for CW+, false for CCW+
+     * @param isBrake true for brake, false for coast
+     * @param statorLimit the stator current limit in amps
+     * @param rampRate time it takes for the motor to reach full power from zero power in seconds
+     * @param ENCODER_TO_MECHANISM_RATIO ratio between the feedback encoder (integrated for drive motors) and the mechanism. this varies based on your gear ratio
+     * @param ROTOR_TO_ENCODER_RATIO ratio between the rotor and the feedback encoder. this is usually 1 for drive motors
+     */
+    public TalonFX makeDrive(int id, boolean inverted, boolean isBrake, double statorLimit, double rampRate, double ENCODER_TO_MECHANISM_RATIO, double ROTOR_TO_ENCODER_RATIO) {
+        //I figured nobody had the guts to put a CANivore on a turdswerve, so i'm leaving out the CAN bus parameter
+        motor = new TalonFX(id);
 
-  public void resetZero() {
-    absoluteEncoderOffset = (absoluteEncoder.getAbsolutePosition() * 2*Math.PI);
-    SmartDashboard.putNumber((getPod() + " Encoder Offset"), absoluteEncoderOffset);
-    resetPod();
-  }
+        //set neutral mode and inverts
+        driveConfig.MotorOutput.Inverted = inverted ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive;
+        driveConfig.MotorOutput.NeutralMode = isBrake ? NeutralModeValue.Brake : NeutralModeValue.Coast;
 
-  public void revertZero() {
-    absoluteEncoderOffset = azimuth.getDeviceId() == RobotMap.leftAzimuthID ? RobotMap.leftAbsoluteEncoderOffset : RobotMap.rightAbsoluteEncoderOffset;
-    SmartDashboard.putNumber((getPod() + " Encoder Offset"), absoluteEncoderOffset);
-    resetPod();
-  }
+        //set current limits; supply current limits are hardcoded because they are almost always the same
+        driveConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+        driveConfig.CurrentLimits.SupplyCurrentLimit = 40d;
+        driveConfig.CurrentLimits.SupplyCurrentThreshold = 40d;
+        driveConfig.CurrentLimits.SupplyTimeThreshold = 100d;
 
-  public void stop() {
-    azimuth.set(0);
-    drive.set(0);
-  }
+        driveConfig.CurrentLimits.StatorCurrentLimitEnable = statorLimit > 0;
+        driveConfig.CurrentLimits.StatorCurrentLimit = statorLimit;
 
-  public void setPID(double P, double I, double D, double IZone, double outputRange, double ADMult) {
-    if (P != azimuthPID.getP()) {azimuthPID.setP(P);}
-    if (I != azimuthPID.getI()) {azimuthPID.setI(I);}
-    if (D != azimuthPID.getD()) {azimuthPID.setD(D);}
-    if (IZone != azimuthPID.getIZone()) {azimuthPID.setIZone(IZone);}
-    if (outputRange != azimuthPID.getOutputMax()) {azimuthPID.setOutputRange(-outputRange, outputRange);}
-    azimuthPID.setPositionPIDWrappingMaxInput(Math.PI);
-    azimuthPID.setPositionPIDWrappingMinInput(-Math.PI);
-    azimuthPID.setPositionPIDWrappingEnabled(true);
-    // azimuthPID.setSmartMotionAllowedClosedLoopError(0, 0);
-    azimuth.setClosedLoopRampRate(0.35);
-    azimuthDriveSpeedMultiplier = ADMult;
-  }
 
-  public SwerveModulePosition getPodPosition() {
-    return new SwerveModulePosition(driveEncoder.getPosition(), new Rotation2d(azimuthEncoder.getPosition()));
-  }
+        // this is kind of bad code, but it's the easiest way to set a ramp rate regardless of control type
+        driveConfig.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = rampRate;
+        driveConfig.OpenLoopRamps.TorqueOpenLoopRampPeriod = rampRate;
+        driveConfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = rampRate; 
+        driveConfig.ClosedLoopRamps.DutyCycleClosedLoopRampPeriod = rampRate;
+        driveConfig.ClosedLoopRamps.TorqueClosedLoopRampPeriod = rampRate;
+        driveConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = rampRate;
 
-  public void setPodState(SwerveModuleState state) {
-    state = SwerveModuleState.optimize(state, new Rotation2d(azimuthEncoder.getPosition())); // does not account for rotations between 180 and 360?
-    azimuthPID.setReference(state.angle.getRadians(), ControlType.kPosition);
-    speed = Math.abs(state.speedMetersPerSecond) < .01 ? 0 : state.speedMetersPerSecond * driveSpeedToPower;
-    SmartDashboard.putNumber("state.angle.getRadians()", state.angle.getRadians());
+        //set feedback ratios
+        driveConfig.Feedback.SensorToMechanismRatio = ENCODER_TO_MECHANISM_RATIO;
+        driveConfig.Feedback.RotorToSensorRatio = ROTOR_TO_ENCODER_RATIO;
+        //the remote sensor defaults to internal encoder
 
-    double error = (state.angle.getRadians() - azimuthEncoder.getPosition()) % (2*Math.PI);
-      error = error > Math.PI ? error - 2*Math.PI : error;
-      error = error < -Math.PI ? error + 2*Math.PI : error;
-      error *= 180 / Math.PI;
-      SmartDashboard.putNumber("error azimuth " + azimuth.getDeviceId(), error);
-  }
+        motor.getConfigurator().apply(driveConfig);
 
-  public double getAbsoluteEncoder() {
-    return (absoluteEncoder.getAbsolutePosition() * 2*Math.PI) - absoluteEncoderOffset;
-  }
+        return motor;
+    }
 
-  public double getDriveAmp() {
-    return drive.getOutputCurrent();
-  }
+    /**
+     * Creates a new TurdonFX (please use this for azimuth with fused CANcoders only)
+     * @param id CAN ID for the motor
+     * @param inverted true for CW+, false for CCW+
+     * @param isBrake true for brake, false for coast
+     * @param statorLimit the stator current limit in amps
+     * @param rampRate time it takes for the motor to reach full power from zero power in seconds
+     * @param outputRange the min/max output of the motor
+     * @param angleEncoderID the id of the CANcoder used fused with the motor
+     * @param ENCODER_TO_MECHANISM_RATIO Ratio between the feedback encoder (CANcoder) and mechanism. This is usually 1 for azimuth motors.
+     * @param ROTOR_TO_ENCODER_RATIO Ratio between the rotor and the feedback encoder. This is depends on the gearbox.
+     * 
+     * @implNote this constructor is for azimuth motors only and uses fused CANcoders. If you are not using CANcoders or do not have phoenix pro, please use another constructor
+     */
 
-  @Override
-  public void periodic() {
-    SmartDashboard.putNumber("getabsoluteEncoder() " + absoluteEncoder.getChannel(), getAbsoluteEncoder());
-    drive.set(speed + (azimuth.getAppliedOutput() * azimuthDriveSpeedMultiplier));
-    SmartDashboard.putNumber("azimuthEncoder.getPosition() " + azimuth.getDeviceId(), azimuthEncoder.getPosition());
-    SmartDashboard.putNumber("drive pos " + drive.getDeviceId(), driveEncoder.getPosition());
-    SmartDashboard.putNumber("azimuth.getoutputcurrent()" + azimuth.getDeviceId(), azimuth.getOutputCurrent());
-    SmartDashboard.putNumber("drive.getoutputcurrent()" + drive.getDeviceId(), drive.getOutputCurrent());
-  }
 
+    /**
+     * creates a new CANTurdCoder
+     * @param inverted true for CW+, false for CCW+
+     * @param offset the offset of the sensor in rotations
+     * @param id the CAN id of the sensor
+     */
+    private CANcoder makeCANCoder(int id, boolean inverted, double offset) {
+        CANcoder encoder = new CANcoder(id);
+
+        coderConfig.MagnetSensor.AbsoluteSensorRange = AbsoluteSensorRangeValue.Signed_PlusMinusHalf;
+        coderConfig.MagnetSensor.SensorDirection = inverted ? SensorDirectionValue.Clockwise_Positive : SensorDirectionValue.CounterClockwise_Positive;
+        coderConfig.MagnetSensor.MagnetOffset = -offset;
+
+        //not applying magnet config directly in order to overwrite other settings
+        encoder.getConfigurator().apply(coderConfig);
+        
+        initialOffset = offset;
+
+        return encoder;
+    }
+
+    public void setPID(double kS, double P, double I, double D, double outputRange, double ADMult, TalonFX motor) {
+        if(azimuthConfig.Slot0.kP != P) {azimuthConfig.Slot0.kP = P; apply = true;}
+        if(azimuthConfig.Slot0.kI != I) {azimuthConfig.Slot0.kI = I; apply = true;}
+        if(azimuthConfig.Slot0.kD != D) {azimuthConfig.Slot0.kD = D; apply = true;}
+        if(azimuthConfig.Slot0.kS != kS) {azimuthConfig.Slot0.kS = kS; apply = true;}
+        if(azimuthConfig.MotorOutput.PeakForwardDutyCycle != outputRange) {
+            azimuthConfig.MotorOutput.PeakForwardDutyCycle = outputRange;
+            azimuthConfig.MotorOutput.PeakReverseDutyCycle = -outputRange;
+            apply = true;
+        }
+        if(apply) {
+            motor.getConfigurator().apply(azimuthConfig);
+        } 
+        azimuthDriveSpeedMultiplier = ADMult;
+
+        apply = false;
+    }
+
+    public void setAmpLimit(int limit) {
+        if(driveConfig.CurrentLimits.StatorCurrentLimit != limit) {
+            driveConfig.CurrentLimits.StatorCurrentLimitEnable = limit > 0;
+            driveConfig.CurrentLimits.StatorCurrentLimit = limit;
+            driveMotor.getConfigurator().apply(driveConfig);
+        }
+    }
+
+    public void resetPod() {
+        driveMotor.setPosition(0);
+        azimuthMotor.setPosition(absoluteEncoder.getAbsolutePosition().getValueAsDouble());
+    }
+
+    public void resetZero() {
+        absoluteEncoder.setPosition(0);
+        resetPod();
+    }
+
+    public void revertZero() {
+        if(coderConfig.MagnetSensor.MagnetOffset != initialOffset) {
+            coderConfig.MagnetSensor.MagnetOffset = initialOffset; 
+            absoluteEncoder.getConfigurator().apply(coderConfig);
+        }
+        resetPod();
+    }
+    
+    public void stop() {
+        azimuthMotor.set(0);
+        driveMotor.set(0);
+    }
+
+    public SwerveModulePosition getPodPosition() {
+        return new SwerveModulePosition(driveMotor.getPosition().getValueAsDouble(), Rotation2d.fromRotations(azimuthMotor.getPosition().getValueAsDouble()));
+    }
+
+    public void setPodState(SwerveModuleState state) {
+        //TODO: for the love of god add comments
+        state = SwerveModuleState.optimize(state, Rotation2d.fromRotations(azimuthMotor.getPosition().getValueAsDouble())); // does not account for rotations between 180 and 360?
+        azimuthMotor.setControl(anglePID.withPosition(state.angle.getRotations())); 
+        speed = Math.abs(state.speedMetersPerSecond) < .01 ? 0 : state.speedMetersPerSecond;
+        // SmartDashboard.putNumber("state.angle.getRadians()", state.angle.getRadians());
+
+        double error = (state.angle.getRadians() - absoluteEncoder.getAbsolutePosition().getValueAsDouble()) % (2*Math.PI);
+            error = error > Math.PI ? error - 2*Math.PI : error;
+            error = error < -Math.PI ? error + 2*Math.PI : error;
+            error *= 180 / Math.PI;
+    }
+
+    @Override
+    public void periodic() {
+        driveMotor.set(speed + (azimuthMotor.getDutyCycle().getValue() * azimuthDriveSpeedMultiplier)); //should this be in setPodState?
+        
+        //TODO: dont use smartdashboard
+        SmartDashboard.putNumber("absolute encoder" + absoluteEncoder.getDeviceID(), absoluteEncoder.getAbsolutePosition().getValueAsDouble());
+        SmartDashboard.putNumber("azimuth pose " + absoluteEncoder.getDeviceID(), azimuthMotor.getPosition().getValueAsDouble());
+        // SmartDashboard.putNumber("azimuth pose " + config.absoluteEncoderID, azimuthMotor.);
+
+        // SmartDashboard.putNumber("drive pos " + driveMotor.getDeviceId(), driveEncoder.getPosition());
+        // SmartDashboard.putNumber("azimuth.getAppliedOutput()" + azimuthMotor.getDeviceId(), azimuthMotor.getAppliedOutput()); //getAppliedOutput());
+    }
 }

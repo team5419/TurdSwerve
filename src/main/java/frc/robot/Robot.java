@@ -4,42 +4,23 @@
 
 package frc.robot;
 
-import edu.wpi.first.util.datalog.BooleanLogEntry;
-import edu.wpi.first.util.datalog.DataLog;
-import edu.wpi.first.util.datalog.DoubleLogEntry;
-import edu.wpi.first.util.datalog.StringLogEntry;
-import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import com.ctre.phoenix6.hardware.TalonFX;
 
 public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
 
   private RobotContainer m_robotContainer;
-  private TalonFX motor = new TalonFX(25, "rio");
-
-  DoubleLogEntry rightAmps;
-  DoubleLogEntry leftAmps;
 
   @Override
   public void robotInit() {
     m_robotContainer = new RobotContainer();
-
-    DataLogManager.start();
-    DataLog log = DataLogManager.getLog();
-    rightAmps = new DoubleLogEntry(log, "left drive amps");
-    leftAmps = new DoubleLogEntry(log, "right drive amps");
   }
 
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
-
-    motor.set(1.0);
-    // leftAmps.append(RobotContainer.swerve.getDriveAmps()[0]);
-    // rightAmps.append(RobotContainer.swerve.getDriveAmps()[1]);
   }
 
   @Override
