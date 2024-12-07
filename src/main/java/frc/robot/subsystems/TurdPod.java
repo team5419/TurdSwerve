@@ -46,9 +46,9 @@ public class TurdPod extends SubsystemBase {
 
     public TurdPod(int absoluteEncoderID, int azimuthID, int driveID, double absoluteEncoderOffset, boolean azimuthInvert, int azimuthLimit, double azimuthRotationsPerRot, boolean azimuthBrake, double azimuthRR, double kP, double kI, double kD, double FF, double maxOut, double ADMult, boolean driveInvert, int driveLimit, boolean driveBrake, double driveRR) {
         absoluteEncoder = makeCANCoder(absoluteEncoderID, false, absoluteEncoderOffset);
-        
+
         driveMotor = makeDrive(driveID, driveInvert, driveBrake, driveLimit, driveRR, 1d, 1d);
-        
+
         this.azimuthMotor = new TalonFX(azimuthID);
 
         //set neutral mode and inverts
@@ -68,7 +68,7 @@ public class TurdPod extends SubsystemBase {
         // this is kind of bad code, but it's the easiest way to set a ramp rate regardless of control type
         azimuthConfig.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = azimuthRR;
         azimuthConfig.OpenLoopRamps.TorqueOpenLoopRampPeriod = azimuthRR;
-        azimuthConfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = azimuthRR; 
+        azimuthConfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = azimuthRR;
         azimuthConfig.ClosedLoopRamps.DutyCycleClosedLoopRampPeriod = azimuthRR;
         azimuthConfig.ClosedLoopRamps.TorqueClosedLoopRampPeriod = azimuthRR;
         azimuthConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = azimuthRR;
@@ -94,11 +94,11 @@ public class TurdPod extends SubsystemBase {
         }
         if(apply) {
             this.azimuthMotor.getConfigurator().apply(azimuthConfig);
-        } 
+        }
         azimuthDriveSpeedMultiplier = ADMult;
 
         apply = false;
-        
+
         resetPod();
     }
 
@@ -133,7 +133,7 @@ public class TurdPod extends SubsystemBase {
         // this is kind of bad code, but it's the easiest way to set a ramp rate regardless of control type
         driveConfig.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = rampRate;
         driveConfig.OpenLoopRamps.TorqueOpenLoopRampPeriod = rampRate;
-        driveConfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = rampRate; 
+        driveConfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = rampRate;
         driveConfig.ClosedLoopRamps.DutyCycleClosedLoopRampPeriod = rampRate;
         driveConfig.ClosedLoopRamps.TorqueClosedLoopRampPeriod = rampRate;
         driveConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = rampRate;
@@ -159,7 +159,7 @@ public class TurdPod extends SubsystemBase {
      * @param angleEncoderID the id of the CANcoder used fused with the motor
      * @param ENCODER_TO_MECHANISM_RATIO Ratio between the feedback encoder (CANcoder) and mechanism. This is usually 1 for azimuth motors.
      * @param ROTOR_TO_ENCODER_RATIO Ratio between the rotor and the feedback encoder. This is depends on the gearbox.
-     * 
+     *
      * @implNote this constructor is for azimuth motors only and uses fused CANcoders. If you are not using CANcoders or do not have phoenix pro, please use another constructor
      */
 
@@ -179,7 +179,7 @@ public class TurdPod extends SubsystemBase {
 
         //not applying magnet config directly in order to overwrite other settings
         encoder.getConfigurator().apply(coderConfig);
-        
+
         initialOffset = offset;
 
         return encoder;
@@ -197,7 +197,7 @@ public class TurdPod extends SubsystemBase {
         }
         if(apply) {
             motor.getConfigurator().apply(azimuthConfig);
-        } 
+        }
         azimuthDriveSpeedMultiplier = ADMult;
 
         apply = false;
@@ -223,12 +223,12 @@ public class TurdPod extends SubsystemBase {
 
     public void revertZero() {
         if(coderConfig.MagnetSensor.MagnetOffset != initialOffset) {
-            coderConfig.MagnetSensor.MagnetOffset = initialOffset; 
+            coderConfig.MagnetSensor.MagnetOffset = initialOffset;
             absoluteEncoder.getConfigurator().apply(coderConfig);
         }
         resetPod();
     }
-    
+
     public void stop() {
         azimuthMotor.set(0);
         driveMotor.set(0);
@@ -241,7 +241,7 @@ public class TurdPod extends SubsystemBase {
     public void setPodState(SwerveModuleState state) {
         //TODO: for the love of god add comments
         state = SwerveModuleState.optimize(state, Rotation2d.fromRotations(azimuthMotor.getPosition().getValueAsDouble())); // does not account for rotations between 180 and 360?
-        azimuthMotor.setControl(anglePID.withPosition(state.angle.getRotations())); 
+        azimuthMotor.setControl(anglePID.withPosition(state.angle.getRotations()));
         speed = Math.abs(state.speedMetersPerSecond) < .01 ? 0 : state.speedMetersPerSecond;
         // SmartDashboard.putNumber("state.angle.getRadians()", state.angle.getRadians());
 
@@ -254,7 +254,7 @@ public class TurdPod extends SubsystemBase {
     @Override
     public void periodic() {
         driveMotor.set(speed + (azimuthMotor.getDutyCycle().getValue() * azimuthDriveSpeedMultiplier)); //should this be in setPodState?
-        
+
         //TODO: dont use smartdashboard
         SmartDashboard.putNumber("absolute encoder" + absoluteEncoder.getDeviceID(), absoluteEncoder.getAbsolutePosition().getValueAsDouble());
         SmartDashboard.putNumber("azimuth pose " + absoluteEncoder.getDeviceID(), azimuthMotor.getPosition().getValueAsDouble());
