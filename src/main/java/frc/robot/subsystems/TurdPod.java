@@ -14,6 +14,7 @@ import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
+import com.reduxrobotics.sensors.canandmag.Canandmag;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -21,9 +22,10 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.motorcontrol.Talon;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
 /** This is a sample pod that uses a CANcoder and TalonFXes. */
 public class TurdPod extends SubsystemBase {
-    public CANcoder absoluteEncoder;
+    public Canandmag absoluteEncoder;
     public TalonFX azimuthMotor;
     public TalonFX driveMotor;
     public double azimuthDriveSpeedMultiplier;
@@ -32,7 +34,7 @@ public class TurdPod extends SubsystemBase {
 
     TalonFXConfiguration driveConfig = new TalonFXConfiguration();
     TalonFXConfiguration azimuthConfig = new TalonFXConfiguration();
-    CANcoderConfiguration coderConfig = new CANcoderConfiguration();
+    // CANcoderConfiguration coderConfig = new CANcoderConfiguration();
 
     //variable that determines whether or not to apply PID configurations to the motor (defaults to true for initial application)
     boolean apply = true;
@@ -45,7 +47,7 @@ public class TurdPod extends SubsystemBase {
 
 
     public TurdPod(int absoluteEncoderID, int azimuthID, int driveID, double absoluteEncoderOffset, boolean azimuthInvert, int azimuthLimit, double azimuthRotationsPerRot, boolean azimuthBrake, double azimuthRR, double kP, double kI, double kD, double FF, double maxOut, double ADMult, boolean driveInvert, int driveLimit, boolean driveBrake, double driveRR) {
-        absoluteEncoder = makeCANCoder(absoluteEncoderID, false, absoluteEncoderOffset);
+        absoluteEncoder = makeCanandmag(absoluteEncoderID, false, absoluteEncoderOffset);
 
         driveMotor = makeDrive(driveID, driveInvert, driveBrake, driveLimit, driveRR, 1d, 1d);
 
@@ -170,15 +172,20 @@ public class TurdPod extends SubsystemBase {
      * @param offset the offset of the sensor in rotations
      * @param id the CAN id of the sensor
      */
-    private CANcoder makeCANCoder(int id, boolean inverted, double offset) {
-        CANcoder encoder = new CANcoder(id);
+    private Canandmag makeCanandmag(int id, boolean inverted, double offset) {
+      Canandmag encoder = new Canandmag(id);
 
-        coderConfig.MagnetSensor.AbsoluteSensorRange = AbsoluteSensorRangeValue.Signed_PlusMinusHalf;
-        coderConfig.MagnetSensor.SensorDirection = inverted ? SensorDirectionValue.Clockwise_Positive : SensorDirectionValue.CounterClockwise_Positive;
-        coderConfig.MagnetSensor.MagnetOffset = -offset;
+        // coderConfig.MagnetSensor.AbsoluteSensorRange = AbsoluteSensorRangeValue.Signed_PlusMinusHalf;
+        // coderConfig.MagnetSensor.SensorDirection = inverted ? SensorDirectionValue.Clockwise_Positive : SensorDirectionValue.CounterClockwise_Positive;
+        // coderConfig.MagnetSensor.MagnetOffset = -offset;
 
         //not applying magnet config directly in order to overwrite other settings
-        encoder.getConfigurator().apply(coderConfig);
+        // encoder.getConfigurator().apply(coderConfig);
+        encoder.setSettings(new Canandmag.Settings()
+          .setZeroOffset(-offset)
+          .setInvertDirection(inverted)
+        );
+        // encoder.setAbsPosition()
 
         initialOffset = offset;
 
@@ -213,7 +220,7 @@ public class TurdPod extends SubsystemBase {
 
     public void resetPod() {
         driveMotor.setPosition(0);
-        azimuthMotor.setPosition(absoluteEncoder.getAbsolutePosition().getValueAsDouble());
+        azimuthMotor.setPosition(absoluteEncoder.getAbsPosition());
     }
 
     public void resetZero() {
@@ -222,10 +229,10 @@ public class TurdPod extends SubsystemBase {
     }
 
     public void revertZero() {
-        if(coderConfig.MagnetSensor.MagnetOffset != initialOffset) {
-            coderConfig.MagnetSensor.MagnetOffset = initialOffset;
-            absoluteEncoder.getConfigurator().apply(coderConfig);
-        }
+        // if(coderConfig.MagnetSensor.MagnetOffset != initialOffset) {
+        //     coderConfig.MagnetSensor.MagnetOffset = initialOffset;
+        //     absoluteEncoder.getConfigurator().apply(coderConfig);
+        // }
         resetPod();
     }
 
@@ -245,7 +252,7 @@ public class TurdPod extends SubsystemBase {
         speed = Math.abs(state.speedMetersPerSecond) < .01 ? 0 : state.speedMetersPerSecond;
         // SmartDashboard.putNumber("state.angle.getRadians()", state.angle.getRadians());
 
-        double error = (state.angle.getRadians() - absoluteEncoder.getAbsolutePosition().getValueAsDouble()) % (2*Math.PI);
+        double error = (state.angle.getRadians() - absoluteEncoder.getAbsPosition()) % (2*Math.PI);
             error = error > Math.PI ? error - 2*Math.PI : error;
             error = error < -Math.PI ? error + 2*Math.PI : error;
             error *= 180 / Math.PI;
@@ -256,8 +263,8 @@ public class TurdPod extends SubsystemBase {
         driveMotor.set(speed + (azimuthMotor.getDutyCycle().getValue() * azimuthDriveSpeedMultiplier)); //should this be in setPodState?
 
         //TODO: dont use smartdashboard
-        SmartDashboard.putNumber("absolute encoder" + absoluteEncoder.getDeviceID(), absoluteEncoder.getAbsolutePosition().getValueAsDouble());
-        SmartDashboard.putNumber("azimuth pose " + absoluteEncoder.getDeviceID(), azimuthMotor.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("absolute encoder" + absoluteEncoder.getAddress().getDeviceId(), absoluteEncoder.getAbsPosition());
+        SmartDashboard.putNumber("azimuth pose " + absoluteEncoder.getAddress().getDeviceId(), azimuthMotor.getPosition().getValueAsDouble());
         // SmartDashboard.putNumber("azimuth pose " + config.absoluteEncoderID, azimuthMotor.);
 
         // SmartDashboard.putNumber("drive pos " + driveMotor.getDeviceId(), driveEncoder.getPosition());
